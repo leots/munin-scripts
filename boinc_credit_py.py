@@ -23,7 +23,7 @@ class MuninBoincCreditPlugin(MuninPlugin):
     """Multigraph Munin Plugin for monitoring Boinc credit.
     """
     plugin_name = "boinc_credit_py"
-    isMultigraph = False
+    isMultigraph = True
     cpid = ""  # todo: get from plugin configuration
     boinc_stats = BoincStats(cpid)
 
@@ -38,15 +38,35 @@ class MuninBoincCreditPlugin(MuninPlugin):
         MuninPlugin.__init__(self, argv, env, debug)
         self._category = "htc"
 
+        # Total credit graph
         graph = MuninGraph("Total Credit", self._category,
                            info="Total credit across all projects.",
                            args="--lower-limit 0")
         graph.addField("credit", "credit", type="GAUGE", draw="LINE2")
-        self.appendGraph("domains_graph", graph)
+        self.appendGraph("total_credit", graph)
+
+        # World Position graph
+        graph = MuninGraph("World Position (Total Credit)", self._category,
+                           info="Position in BOINC combined World stats based "
+                                "on total credit.",
+                           args="--lower-limit 0")
+        graph.addField("position", "position", type="GAUGE", draw="LINE2")
+        self.appendGraph("world_position", graph)
+
+        # RAC graph
+        graph = MuninGraph("R.A.C. Combined", self._category,
+                           info="Total RAC across all projects.",
+                           args="--lower-limit 0")
+        graph.addField("rac", "rac", type="GAUGE", draw="LINE2")
+        self.appendGraph("rac", graph)
 
     def retrieveVals(self):
         """Retrieve values for graphs."""
-        return self.boinc_stats.get_stats()
+        stats = self.boinc_stats.get_stats()
+        self.setGraphVal("total_credit", "credit", stats["total_credit"])
+        self.setGraphVal("world_position", "position", stats["world_position"])
+        self.setGraphVal("rac", "rac", stats["rac"])
+        pass
 
     def autoconf(self):
         """Implements Munin Plugin Auto-Configuration Option.
