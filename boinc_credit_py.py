@@ -7,6 +7,7 @@ https://github.com/munin-monitoring/contrib/blob/master/plugins/boinc/boinc_cred
 # %# family=auto
 # %# capabilities=autoconf nosuggest
 
+import re
 import sys
 
 from pymunin import MuninGraph, MuninPlugin, muninMain
@@ -19,6 +20,10 @@ __maintainer__ = "Leonidas Tsekouras"
 __status__ = "Development"
 
 
+def proj_name_to_id(proj_name):
+    return (re.sub("[^a-zA-Z]+", "", proj_name)).lower()
+
+
 class MuninBoincCreditPlugin(MuninPlugin):
     """
     Multigraph Munin Plugin for monitoring Boinc credit.
@@ -27,6 +32,7 @@ class MuninBoincCreditPlugin(MuninPlugin):
     isMultigraph = True
     cpid = ""  # todo: get from plugin configuration
     boinc_stats = BoincStats(cpid)
+    project_colors = boinc_stats.colors
 
     def __init__(self, argv=(), env=None, debug=False):
         """
@@ -56,34 +62,45 @@ class MuninBoincCreditPlugin(MuninPlugin):
         self.appendGraph("world_position", graph)
 
         # RAC graph
-        graph = MuninGraph("R.A.C. Combined", self._category,
-                           info="Total RAC across all projects.",
+        graph = MuninGraph("BOINC Recent Average Credit", self._category,
+                           info="Recent Average Credit across all projects.",
+                           vlabel="Cobblestones",
                            args="--lower-limit 0")
-        graph.addField("rac", "rac", type="GAUGE", draw="LINE2")
+        graph.addField("R.A.C.", "rac", type="GAUGE", draw="LINE2")
         self.appendGraph("rac", graph)
 
         # Credit per project graph
         graph = MuninGraph("BOINC Total Credit per project", self._category,
                            info="BOINC credit for each project.",
                            vlabel="Cobblestones",
-                           args="--base 1000 --logarithmic")
+                           args="--base 1000")
         # Maybe the type could be COUNTER here... Credit shouldn't decrease
-        projects = self.boinc_stats.colors
-        for project in projects:
-            graph.addField(project.lower(), project, colour=projects[project],
-                           type="GAUGE", draw="AREASTACK",
-                           info="Total Credit for project " + project)
+
+        # Only add to the graph the projects that are active for this user
+        # todo: check that below line doesn't run every 5 minutes
+        stats = self.boinc_stats.get_stats()
+        for project in stats["projects"]:
+            # Find color for this project, if it exists
+            if project[0] in self.project_colors:
+                color = self.project_colors[project[0]]
+            else:
+                color = None
+
+            graph.addField(proj_name_to_id(project[0]), project[0].lower(),
+                           type="GAUGE", draw="AREASTACK", colour=color,
+                           info="Total Credit for project " + project[0])
         self.appendGraph("credits_per_proj", graph)
 
     def retrieveVals(self):
         """Retrieve values for graphs."""
         stats = self.boinc_stats.get_stats()
+
         self.setGraphVal("total_credit", "credit", stats["total_credit"])
         self.setGraphVal("world_position", "position", stats["world_position"])
         self.setGraphVal("rac", "rac", stats["rac"])
-        for proj_credit in stats["projects"]:
-            self.setGraphVal("credits_per_proj", proj_credit[0].lower(),
-                             proj_credit[1])
+        for project in stats["projects"]:
+            self.setGraphVal("credits_per_proj", proj_name_to_id(project[0]),
+                             project[1])
 
     def autoconf(self):
         """Implements Munin Plugin Auto-Configuration Option.

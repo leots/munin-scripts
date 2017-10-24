@@ -19,7 +19,7 @@ def td_next_to(soup_table, text):
 
 
 def rgb(r, g, b):
-    return "#%02x%02x%02x" % (r, g, b)
+    return "%02x%02x%02x" % (r, g, b)
 
 
 class BoincStats:
@@ -82,15 +82,7 @@ class BoincStats:
         "Superlink@Technion": rgb(202, 255, 112),
         "BRaTS@Home": rgb(255, 106, 106),
         "Cosmology@Home": rgb(240, 230, 140),
-        "SHA 1 Collision Search": rgb(255, 250, 205),
-        "climate prediction": rgb(0, 0, 0),  # todo: add colors to new projects
-        "collatz conjecture": rgb(0, 0, 0),
-        "enigma@home": rgb(0, 0, 0),
-        "milkyway@home": rgb(0, 0, 0),
-        "mindmodeling@home": rgb(0, 0, 0),
-        "vgtu project@home": rgb(0, 0, 0),
-        "wuprop@home": rgb(0, 0, 0),
-        "moo! wrapper": rgb(0, 0, 0)
+        "SHA 1 Collision Search": rgb(255, 250, 205)
     }
 
     # Define text for finding the values in the Overview table
@@ -106,7 +98,6 @@ class BoincStats:
         # Save the CPID
         self.cpid = cpid
         self.stats_url = self.url_base + cpid
-        self.lower_case_colors = [x.lower() for x in self.colors]
 
     def get_stats(self):
         # Initialize empty dictionary for stats
@@ -154,15 +145,11 @@ class BoincStats:
         # Find the first <tbody>, which is the table we want, and its <tr>'s
         table_rows = soup.find("table", id="tblStats").find_all("tr")[2:]
         for row in table_rows:
+            # Get project name and current project credit
             cells = row.find_all("td")
-
-            # Get project name and only continue if it has a color
             proj_name = cells[0].text
-            if proj_name.lower() not in self.lower_case_colors:
-                continue
-
-            # Find current project credit
             proj_credit = float(cells[1].text.replace(",", ""))
+
             stats["projects"].append((proj_name, proj_credit))
 
         return stats
