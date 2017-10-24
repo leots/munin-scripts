@@ -20,7 +20,8 @@ __status__ = "Development"
 
 
 class MuninBoincCreditPlugin(MuninPlugin):
-    """Multigraph Munin Plugin for monitoring Boinc credit.
+    """
+    Multigraph Munin Plugin for monitoring Boinc credit.
     """
     plugin_name = "boinc_credit_py"
     isMultigraph = True
@@ -28,20 +29,21 @@ class MuninBoincCreditPlugin(MuninPlugin):
     boinc_stats = BoincStats(cpid)
 
     def __init__(self, argv=(), env=None, debug=False):
-        """Populate Munin Plugin with MuninGraph instances.
+        """
+        Populate Munin Plugin with MuninGraph instances.
 
         @param argv:  List of command line arguments.
         @param env:   Dictionary of environment variables.
         @param debug: Print debugging messages if True. (Default: False)
-
         """
         MuninPlugin.__init__(self, argv, env, debug)
         self._category = "htc"
 
         # Total credit graph
-        graph = MuninGraph("Total Credit", self._category,
+        graph = MuninGraph("BOINC Total Credit", self._category,
+                           vlabel="Cobblestones",
                            info="Total credit across all projects.",
-                           args="--lower-limit 0")
+                           args="--base 1000 --logarithmic")
         graph.addField("credit", "credit", type="GAUGE", draw="LINE2")
         self.appendGraph("total_credit", graph)
 
@@ -60,23 +62,35 @@ class MuninBoincCreditPlugin(MuninPlugin):
         graph.addField("rac", "rac", type="GAUGE", draw="LINE2")
         self.appendGraph("rac", graph)
 
+        # Credit per project graph
+        graph = MuninGraph("BOINC Total Credit per project", self._category,
+                           info="BOINC credit for each project.",
+                           vlabel="Cobblestones",
+                           args="--base 1000 --logarithmic")
+        # Maybe the type could be COUNTER here... Credit shouldn't decrease
+        projects = self.boinc_stats.colors
+        for project in projects:
+            graph.addField(project.lower(), project, colour=projects[project],
+                           type="GAUGE", draw="AREASTACK",
+                           info="Total Credit for project " + project)
+        self.appendGraph("credits_per_proj", graph)
+
     def retrieveVals(self):
         """Retrieve values for graphs."""
         stats = self.boinc_stats.get_stats()
         self.setGraphVal("total_credit", "credit", stats["total_credit"])
         self.setGraphVal("world_position", "position", stats["world_position"])
         self.setGraphVal("rac", "rac", stats["rac"])
-        pass
+        for proj_credit in stats["projects"]:
+            self.setGraphVal("credits_per_proj", proj_credit[0].lower(),
+                             proj_credit[1])
 
     def autoconf(self):
         """Implements Munin Plugin Auto-Configuration Option.
-
         @return: True if plugin can be  auto-configured, False otherwise.
-
         """
-        # todo: write this
-        stats = [1]
-        return len(stats) > 0
+        # We cannot guess the CPID, so False.
+        return False
 
 
 def main():
