@@ -27,6 +27,10 @@ class BoincStats:
     cpid = None
     stats_url = None
 
+    # Define URLs for getting information
+    url_base = "https://boincstats.com/en/stats/-1/user/detail/"
+    projects_url_postfix = "/projectList"
+
     # Define project colors (from boinc_credit plugin, which in turn are from
     # http://boinc.netsoft-online.com/e107_plugins/forum/forum_viewtopic.php?3)
     colors = {
@@ -78,7 +82,15 @@ class BoincStats:
         "Superlink@Technion": rgb(202, 255, 112),
         "BRaTS@Home": rgb(255, 106, 106),
         "Cosmology@Home": rgb(240, 230, 140),
-        "SHA 1 Collision Search": rgb(255, 250, 205)
+        "SHA 1 Collision Search": rgb(255, 250, 205),
+        "climate prediction": rgb(0, 0, 0),  # todo: add colors to new projects
+        "collatz conjecture": rgb(0, 0, 0),
+        "enigma@home": rgb(0, 0, 0),
+        "milkyway@home": rgb(0, 0, 0),
+        "mindmodeling@home": rgb(0, 0, 0),
+        "vgtu project@home": rgb(0, 0, 0),
+        "wuprop@home": rgb(0, 0, 0),
+        "moo! wrapper": rgb(0, 0, 0)
     }
 
     # Define text for finding the values in the Overview table
@@ -86,14 +98,15 @@ class BoincStats:
         "total_credit": "Current Credit based on incremental update",
         "world_position": "Link to position in BOINC combined World stats "
                           "based on incremental update",
-        "rac": "Recent average credit RAC (according to BOINCstats)"
+        "rac": "Recent average credit RAC (according to BOINCstats)",
+        "user_id": "User ID"
     }
 
     def __init__(self, cpid):
         # Save the CPID
         self.cpid = cpid
-        self.stats_url = "https://boincstats.com/en/stats/-1/user/detail/" + \
-                         cpid + "/"
+        self.stats_url = self.url_base + cpid
+        self.lower_case_colors = [x.lower() for x in self.colors]
 
     def get_stats(self):
         # Initialize empty dictionary for stats
@@ -125,5 +138,31 @@ class BoincStats:
         # Find Recent Average Credit
         td_contents = td_next_to(stats_table, self.td_contents["rac"])
         stats["rac"] = float(td_contents[0].replace(",", ""))
+
+        # Find BAM user id, to find their project list
+        td_contents = td_next_to(stats_table, self.td_contents["user_id"])
+        user_id = td_contents[0]
+
+        # Load the projects list page
+        projects_url = self.url_base + user_id + self.projects_url_postfix
+        r = requests.get(projects_url)
+        soup = BeautifulSoup(r.text, "html.parser")
+
+        # Add property to keep project stats
+        stats["projects"] = []
+
+        # Find the first <tbody>, which is the table we want, and its <tr>'s
+        table_rows = soup.find("table", id="tblStats").find_all("tr")[2:]
+        for row in table_rows:
+            cells = row.find_all("td")
+
+            # Get project name and only continue if it has a color
+            proj_name = cells[0].text
+            if proj_name.lower() not in self.lower_case_colors:
+                continue
+
+            # Find current project credit
+            proj_credit = float(cells[1].text.replace(",", ""))
+            stats["projects"].append((proj_name, proj_credit))
 
         return stats
