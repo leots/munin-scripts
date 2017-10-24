@@ -18,10 +18,68 @@ def td_next_to(soup_table, text):
     return target_td.contents
 
 
+def rgb(r, g, b):
+    return "#%02x%02x%02x" % (r, g, b)
+
+
 class BoincStats:
     """A class to get Boinc statistics for a CPID from BAM!"""
     cpid = None
     stats_url = None
+
+    # Define project colors (from boinc_credit plugin, which in turn are from
+    # http://boinc.netsoft-online.com/e107_plugins/forum/forum_viewtopic.php?3)
+    colors = {
+        "climatepredition.net": rgb(0, 139, 69),
+        "Predictor@Home": rgb(135, 206, 235),
+        "SETI@home": rgb(65, 105, 225),
+        "Einstein@Home": rgb(255, 165, 0),
+        "Rosetta@home": rgb(238, 130, 238),
+        "PrimeGrid": rgb(205, 197, 191),
+        "LHC@home": rgb(255, 127, 80),
+        "World Community Grid": rgb(250, 128, 114),
+        "BURP": rgb(0, 255, 127),
+        "SZTAKI Desktop Grid": rgb(205, 79, 57),
+        "uFluids": rgb(0, 0, 0),
+        "SIMAP": rgb(143, 188, 143),
+        "Folding@Home": rgb(153, 50, 204),
+        "MalariaControl": rgb(30, 144, 255),
+        "The Lattice Project": rgb(0, 100, 0),
+        "Pirates@Home": rgb(127, 255, 0),
+        "BBC Climate Change Experiment": rgb(205, 173, 0),
+        "Leiden Classical": rgb(140, 34, 34),
+        "SETI@home Beta": rgb(152, 245, 255),
+        "RALPH@Home": rgb(250, 240, 230),
+        "QMC@HOME": rgb(144, 238, 144),
+        "XtremLab": rgb(130, 130, 130),
+        "HashClash": rgb(255, 105, 180),
+        "cpdn seasonal": rgb(255, 255, 255),
+        "Chess960@Home Alpha": rgb(165, 42, 42),
+        "vtu@home": rgb(255, 0, 0),
+        "LHC@home alpha": rgb(205, 133, 63),
+        "TANPAKU": rgb(189, 183, 107),
+        "other": rgb(255, 193, 37),
+        "Rectilinear Crossing Number": rgb(83, 134, 139),
+        "Nano-Hive@Home": rgb(193, 205, 193),
+        "Spinhenge@home": rgb(255, 240, 245),
+        "RieselSieve": rgb(205, 183, 158),
+        "Project Neuron": rgb(139, 58, 98),
+        "RenderFarm@Home": rgb(210, 105, 30),
+        "Docking@Home": rgb(178, 223, 238),
+        "proteins@home": rgb(0, 0, 255),
+        "DepSpid": rgb(139, 90, 43),
+        "ABC@home": rgb(222, 184, 135),
+        "BOINC alpha test": rgb(245, 245, 220),
+        "WEP-M+2": rgb(0, 250, 154),
+        "Zivis Superordenador Ciudadano": rgb(255, 239, 219),
+        "SciLINC": rgb(240, 248, 255),
+        "APS@Home": rgb(205, 91, 69),
+        "PS3GRID": rgb(0, 139, 139),
+        "Superlink@Technion": rgb(202, 255, 112),
+        "BRaTS@Home": rgb(255, 106, 106),
+        "Cosmology@Home": rgb(240, 230, 140),
+        "SHA 1 Collision Search": rgb(255, 250, 205)
+    }
 
     # Define text for finding the values in the Overview table
     td_contents = {
