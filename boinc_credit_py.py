@@ -66,7 +66,7 @@ class MuninBoincCreditPlugin(MuninPlugin):
                            info="Recent Average Credit across all projects.",
                            vlabel="Cobblestones",
                            args="--lower-limit 0")
-        graph.addField("R.A.C.", "rac", type="GAUGE", draw="LINE2")
+        graph.addField("rac", "R.A.C.", type="GAUGE", draw="LINE2")
         self.appendGraph("rac", graph)
 
         # Credit per project graph
