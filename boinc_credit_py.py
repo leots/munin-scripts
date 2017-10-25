@@ -7,6 +7,8 @@ https://github.com/munin-monitoring/contrib/blob/master/plugins/boinc/boinc_cred
 # %# family=auto
 # %# capabilities=autoconf nosuggest
 
+# todo: Use plugin state to run every 60 minutes instead of 5
+
 import re
 import sys
 
@@ -83,19 +85,26 @@ class MuninBoincCreditPlugin(MuninPlugin):
                            args="--base 1000")
         # Maybe the type could be COUNTER here... Credit shouldn't decrease
 
+        # Try to restore the projects list from state
+        projects_list = self.restoreState()
+
+        if projects_list is None:
+            # Retrieve projects list and save it
+            stats = self.boinc_stats.get_stats()
+            projects_list = [p[0] for p in stats["projects"]]
+            self.saveState(projects_list)
+
         # Only add to the graph the projects that are active for this user
-        # todo: Find a way to not run below line every 5 minutes
-        stats = self.boinc_stats.get_stats()
-        for project in stats["projects"]:
+        for project in projects_list:
             # Find color for this project, if it exists
-            if project[0] in self.project_colors:
-                color = self.project_colors[project[0]]
+            if project in self.project_colors:
+                color = self.project_colors[project]
             else:
                 color = None
 
-            graph.addField(proj_name_to_id(project[0]), project[0].lower(),
+            graph.addField(proj_name_to_id(project), project.lower(),
                            type="GAUGE", draw="AREASTACK", colour=color,
-                           info="Total Credit for project " + project[0])
+                           info="Total Credit for project " + project)
         self.appendGraph("credits_per_proj", graph)
 
     def retrieveVals(self):
