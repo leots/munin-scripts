@@ -30,9 +30,9 @@ class MuninBoincCreditPlugin(MuninPlugin):
     """
     plugin_name = "boinc_credit_py"
     isMultigraph = True
-    cpid = ""  # todo: get from plugin configuration
-    boinc_stats = BoincStats(cpid)
-    project_colors = boinc_stats.colors
+    cpid = None
+    boinc_stats = None
+    project_colors = None
 
     def __init__(self, argv=(), env=None, debug=False):
         """
@@ -43,6 +43,13 @@ class MuninBoincCreditPlugin(MuninPlugin):
         @param debug: Print debugging messages if True. (Default: False)
         """
         MuninPlugin.__init__(self, argv, env, debug)
+
+        # Get CPID from environment
+        if self.cpid is None and self.envHasKey("cpid"):
+            self.cpid = self.envGet("cpid")
+            self.boinc_stats = BoincStats(self.cpid)
+            self.project_colors = self.boinc_stats.colors
+
         self._category = "htc"
 
         # Total credit graph
@@ -77,7 +84,7 @@ class MuninBoincCreditPlugin(MuninPlugin):
         # Maybe the type could be COUNTER here... Credit shouldn't decrease
 
         # Only add to the graph the projects that are active for this user
-        # todo: check that below line doesn't run every 5 minutes
+        # todo: Find a way to not run below line every 5 minutes
         stats = self.boinc_stats.get_stats()
         for project in stats["projects"]:
             # Find color for this project, if it exists
