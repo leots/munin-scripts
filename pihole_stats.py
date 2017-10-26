@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 """pihole_stats - Munin Plugin to monitor stats of PiHole installation.
 """
+# Example config:
+# [pihole_stats]
+# env.ip 192.168.1.73
+
 # Munin  - Magic Markers
 # %# family=auto
 # %# capabilities=autoconf nosuggest
@@ -22,8 +26,6 @@ class MuninPiHolePlugin(MuninPlugin):
     """
     plugin_name = "pihole_stats"
     isMultigraph = False
-    # todo: get IP from configuration
-    pihole_url = "http://192.168.1.73/admin/api.php?overTimeData10mins"
 
     def __init__(self, argv=(), env=None, debug=False):
         """Populate Munin Plugin with MuninGraph instances.
@@ -34,11 +36,14 @@ class MuninPiHolePlugin(MuninPlugin):
 
         """
         MuninPlugin.__init__(self, argv, env, debug)
-        self._category = "PiHole"
+        self._category = "network"
+        self.ip_addr = self.envGet("ip")
+        self.pihole_url = "http://" + str(self.envGet("ip")) \
+                          + "/admin/api.php?overTimeData10mins"
 
-        graph = MuninGraph("Domains Over Time", self._category,
+        graph = MuninGraph("PiHole Domains Over Time", self._category,
                            info="Number of requests.",
-                           args="--lower-limit 0")
+                           args="--lower-limit 0 --logarithmic")
         graph.addField("blocked", "blocked", type="GAUGE", draw="LINE2")
         graph.addField("total", "total", type="GAUGE", draw="LINE2")
         self.appendGraph("domains_graph", graph)
@@ -67,9 +72,8 @@ class MuninPiHolePlugin(MuninPlugin):
         @return: True if plugin can be  auto-configured, False otherwise.
 
         """
-        # todo: write this
-        stats = [1]
-        return len(stats) > 0
+        # False because we can't guess the IP of the PiHole DNS server
+        return False
 
 
 def main():
