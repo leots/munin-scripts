@@ -7,10 +7,9 @@ https://github.com/munin-monitoring/contrib/blob/master/plugins/boinc/boinc_cred
 # %# family=auto
 # %# capabilities=autoconf nosuggest
 
-# todo: Use plugin state to run every 60 minutes instead of 5
-
 import re
 import sys
+from datetime import datetime
 
 from pymunin import MuninGraph, MuninPlugin, muninMain
 
@@ -36,6 +35,24 @@ class MuninBoincCreditPlugin(MuninPlugin):
     boinc_stats = None
     project_colors = None
 
+    def get_stats(self):
+        # Try to restore the projects list from state
+        state = self.restoreState()
+
+        # If no previous state is found or the data is old, get stats again
+        if state is None \
+                or (datetime.now() - state["time"]).total_seconds() > 60 * 60:
+            stats = self.boinc_stats.get_stats()
+            curr_time = datetime.now()
+
+            # Save the stats together with their timestamp
+            state = {
+                "stats": stats,
+                "time": curr_time
+            }
+            self.saveState(state)
+        return state["stats"]
+
     def __init__(self, argv=(), env=None, debug=False):
         """
         Populate Munin Plugin with MuninGraph instances.
@@ -49,8 +66,9 @@ class MuninBoincCreditPlugin(MuninPlugin):
         # Get CPID from environment
         if self.cpid is None and self.envHasKey("cpid"):
             self.cpid = self.envGet("cpid")
-            self.boinc_stats = BoincStats(self.cpid)
-            self.project_colors = self.boinc_stats.colors
+
+        self.boinc_stats = BoincStats(self.cpid)
+        self.project_colors = self.boinc_stats.colors
 
         self._category = "htc"
 
@@ -85,31 +103,24 @@ class MuninBoincCreditPlugin(MuninPlugin):
                            args="--base 1000")
         # Maybe the type could be COUNTER here... Credit shouldn't decrease
 
-        # Try to restore the projects list from state
-        projects_list = self.restoreState()
-
-        if projects_list is None:
-            # Retrieve projects list and save it
-            stats = self.boinc_stats.get_stats()
-            projects_list = [p[0] for p in stats["projects"]]
-            self.saveState(projects_list)
-
         # Only add to the graph the projects that are active for this user
-        for project in projects_list:
+        for project in self.get_stats()["projects"]:
+            project_name = project[0]
+
             # Find color for this project, if it exists
-            if project in self.project_colors:
-                color = self.project_colors[project]
+            if project_name in self.project_colors:
+                color = self.project_colors[project_name]
             else:
                 color = None
 
-            graph.addField(proj_name_to_id(project), project.lower(),
+            graph.addField(proj_name_to_id(project_name), project_name.lower(),
                            type="GAUGE", draw="AREASTACK", colour=color,
-                           info="Total Credit for project " + project)
+                           info="Total Credit for project " + project_name)
         self.appendGraph("credits_per_proj", graph)
 
     def retrieveVals(self):
         """Retrieve values for graphs."""
-        stats = self.boinc_stats.get_stats()
+        stats = self.get_stats()
 
         self.setGraphVal("total_credit", "credit", stats["total_credit"])
         self.setGraphVal("world_position", "position", stats["world_position"])
