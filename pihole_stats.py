@@ -43,7 +43,7 @@ class MuninPiHolePlugin(MuninPlugin):
 
         graph = MuninGraph("PiHole Domains Over Time", self._category,
                            info="Number of requests.",
-                           args="--lower-limit 0 --logarithmic")
+                           args="--lower-limit 0")
         graph.addField("blocked", "blocked", type="GAUGE", draw="LINE2")
         graph.addField("total", "total", type="GAUGE", draw="LINE2")
         self.appendGraph("domains_graph", graph)
