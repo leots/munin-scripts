@@ -22,7 +22,7 @@ __status__ = "Development"
 
 
 class MuninPiHolePlugin(MuninPlugin):
-    """Multigraph Munin Plugin for monitoring PiHole.
+    """Munin Plugin for monitoring PiHole.
     """
     plugin_name = "pihole_stats"
     isMultigraph = False
@@ -38,7 +38,7 @@ class MuninPiHolePlugin(MuninPlugin):
         MuninPlugin.__init__(self, argv, env, debug)
         self._category = "network"
         self.ip_addr = self.envGet("ip")
-        self.pihole_url = "http://" + str(self.envGet("ip")) \
+        self.pihole_url = "http://" + str(self.ip_addr) \
                           + "/admin/api.php?overTimeData10mins"
 
         graph = MuninGraph("PiHole Domains Over Time", self._category,
