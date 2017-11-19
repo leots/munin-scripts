@@ -42,7 +42,7 @@ class MuninPiHolePlugin(MuninPlugin):
                           + "/admin/api.php?overTimeData10mins"
 
         graph = MuninGraph("PiHole Domains Over Time", self._category,
-                           info="Number of requests.",
+                           info="Number of requests.", vlabel="DNS requests",
                            args="--lower-limit 0")
         graph.addField("blocked", "blocked", type="GAUGE", draw="LINE2")
         graph.addField("total", "total", type="GAUGE", draw="LINE2")
@@ -69,7 +69,7 @@ class MuninPiHolePlugin(MuninPlugin):
     def autoconf(self):
         """Implements Munin Plugin Auto-Configuration Option.
 
-        @return: True if plugin can be  auto-configured, False otherwise.
+        @return: True if plugin can be auto-configured, False otherwise.
 
         """
         # False because we can't guess the IP of the PiHole DNS server

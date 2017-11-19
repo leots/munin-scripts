@@ -47,7 +47,7 @@ class MuninSpeedportPlugin(MuninPlugin):
         # Create graph
         graph = MuninGraph("Downstream/Upstream", self._category,
                            info="Current downstream & upstream speed in kbps.",
-                           args="--lower-limit 0")
+                           args="--lower-limit 0", vlabel="Speed (kbps)")
         graph.addField("upstream", "upstream", type="GAUGE", draw="LINE2")
         graph.addField("downstream", "downstream", type="GAUGE", draw="LINE2")
         self.appendGraph("down_up_graph", graph)
@@ -68,7 +68,7 @@ class MuninSpeedportPlugin(MuninPlugin):
     def autoconf(self):
         """Implements Munin Plugin Auto-Configuration Option.
 
-        @return: True if plugin can be  auto-configured, False otherwise.
+        @return: True if plugin can be auto-configured, False otherwise.
 
         """
         # False because we can't guess the IP of the Speedport modem/router

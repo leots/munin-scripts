@@ -131,7 +131,7 @@ class MuninBoincCreditPlugin(MuninPlugin):
 
     def autoconf(self):
         """Implements Munin Plugin Auto-Configuration Option.
-        @return: True if plugin can be  auto-configured, False otherwise.
+        @return: True if plugin can be auto-configured, False otherwise.
         """
         # We cannot guess the CPID, so False.
         return False
