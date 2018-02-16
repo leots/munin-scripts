@@ -1,0 +1,3 @@
+pymunin
+beautifulsoup4
+requests
